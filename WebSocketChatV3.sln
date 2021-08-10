@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignalRChatServer", "Signal
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClient", "ChatClient\ChatClient.csproj", "{BF30E434-CDBF-448D-9184-79ECE59B22E8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{918202DB-CDAC-4443-AD2E-FF3742EC2694}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Application\Application.csproj", "{C55C3A79-37CC-40DF-A382-305E062795E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{BF30E434-CDBF-448D-9184-79ECE59B22E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BF30E434-CDBF-448D-9184-79ECE59B22E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF30E434-CDBF-448D-9184-79ECE59B22E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{918202DB-CDAC-4443-AD2E-FF3742EC2694}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{918202DB-CDAC-4443-AD2E-FF3742EC2694}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{918202DB-CDAC-4443-AD2E-FF3742EC2694}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{918202DB-CDAC-4443-AD2E-FF3742EC2694}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C55C3A79-37CC-40DF-A382-305E062795E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C55C3A79-37CC-40DF-A382-305E062795E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C55C3A79-37CC-40DF-A382-305E062795E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C55C3A79-37CC-40DF-A382-305E062795E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

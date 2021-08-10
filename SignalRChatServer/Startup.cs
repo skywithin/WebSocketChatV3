@@ -1,15 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using Application.Db;
+using Application.Services;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using SignalRChatServer.Hubs;
+using System;
+using System.Linq;
 
 namespace SignalRChatServer
 {
@@ -24,13 +24,18 @@ namespace SignalRChatServer
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationServices();
             services.AddSignalR();
+            services.AddMediatR(AppDomain.CurrentDomain.GetAssemblies());
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes =
                    ResponseCompressionDefaults.MimeTypes.Concat(
                        new[] { "application/octet-stream" });
             });
+
+            // Use in-memony SQL database
+            services.AddDbContext<GameDbContext>(opt => opt.UseInMemoryDatabase("InMemoryTestDb"));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -40,7 +45,7 @@ namespace SignalRChatServer
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<ChatHub>("/chathub");
+                endpoints.MapHub<GameHub>("/gamehub");
             });
         }
     }
