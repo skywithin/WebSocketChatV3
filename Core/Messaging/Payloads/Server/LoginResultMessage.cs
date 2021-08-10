@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Core.Messaging.Payloads
+namespace Core.Messaging.Payloads.Server
 {
     //TODO: Proper implementation of authentication
     public class LoginResultMessage : IMessagePayload

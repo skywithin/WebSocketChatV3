@@ -7,5 +7,6 @@
         public static string HubGroupChat => "HubGroupChat";
         public static string HubJoinGroup => "HubJoinGroup";
         public static string HubLeaveGroup => "HubLeaveGroup";
+        public static string HubListGroups => "HubListGroups";
     }
 }

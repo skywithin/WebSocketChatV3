@@ -1,11 +1,15 @@
-﻿using Application.MediatR.Commands.FindOrCreateUser;
+﻿using Application.Config;
+using Application.MediatR.Commands.FindOrCreateUser;
+using Application.MediatR.Commands.RemoveUserFromGroup;
 using Application.MediatR.Commands.StoreChat;
 using Application.MediatR.Queries.GetChatHistory;
+using Application.MediatR.Queries.ListAvailableGroups;
 using Application.Services;
 using Application.Services.Models;
 using Core.Messaging;
 using Core.Messaging.Constants;
-using Core.Messaging.Payloads;
+using Core.Messaging.Payloads.Client;
+using Core.Messaging.Payloads.Server;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -46,7 +50,7 @@ namespace SignalRChatServer.Hubs
         {
             _logger.LogInformation($"Received echo request from {Context.ConnectionId}");
 
-            await Clients.Client(Context.ConnectionId).SendAsync(ClientCommand.Echo, message);
+            await Clients.Caller.SendAsync(ClientCommand.Echo, message);
         }
 
         public async Task HubLogin(Message<LoginRequestMessage> message)
@@ -150,15 +154,16 @@ namespace SignalRChatServer.Hubs
 
             await Clients.Group(groupName).SendAsync(ClientCommand.UserJoinedGroup, userJoinedMsg);
 
+            //TODO: Move to service layer
             // Send chat message history to the new user
             var messageHistory = await _mediator.Send(new GetChatHistoryQuery(joinGroupResult.GroupId));
 
             foreach (var prevMsg in messageHistory.ChatHistory)
             {
                 var previousChatMsg =
-                    new MessageBuilder<ChatMessage>()
+                    new MessageBuilder<ChatEchoMessage>()
                         .WithPayload(
-                            new ChatMessage(
+                            new ChatEchoMessage(
                                 prevMsg.UserId,
                                 prevMsg.AuthorName,
                                 prevMsg.GroupId,
@@ -177,13 +182,16 @@ namespace SignalRChatServer.Hubs
         {
             var msgPayload = message.Payload;
 
-            _logger.LogInformation($"User {msgPayload.UserName} is leaving group {msgPayload.GroupName}");
+            _logger.LogInformation($"User {msgPayload.UserId} is leaving group {msgPayload.GroupId}");
 
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, msgPayload.GroupName);
 
+            //TODO: Move to service layer
+            await _mediator.Send(new RemoveUserFromGroupCommand(msgPayload.UserId, msgPayload.GroupId));
+
             var leaveMsg =
                 new MessageBuilder<UserLeftGroupMessage>()
-                    .WithPayload(new UserLeftGroupMessage { GroupName = msgPayload.GroupName, UserName = msgPayload.UserName })
+                    .WithPayload(new UserLeftGroupMessage(msgPayload.UserName, msgPayload.GroupName))
                     .Build();
 
             await Clients.Group(msgPayload.GroupName).SendAsync(ClientCommand.UserLeftGroup, leaveMsg);
@@ -197,7 +205,7 @@ namespace SignalRChatServer.Hubs
 
             _logger.LogInformation($"Received message from {msgPayload.UserName} for group {msgPayload.GroupName}");
 
-            //TODO: Save message
+            //TODO: Move to service layer
             await _mediator.Send(
                 new StoreChatCommand
                 {
@@ -208,8 +216,43 @@ namespace SignalRChatServer.Hubs
                     Content = msgPayload.Content,
                 });
 
+            var broadcast =
+                new MessageBuilder<ChatEchoMessage>()
+                    .WithPayload(
+                        new ChatEchoMessage (
+                            msgPayload.UserId,
+                            msgPayload.UserName,
+                            msgPayload.GroupId,
+                            msgPayload.GroupName,
+                            msgPayload.Content,
+                            msgPayload.DateCreatedUtc))
+                    .Build();
 
-            await Clients.Group(msgPayload.GroupName).SendAsync(ClientCommand.MessageToGroup, message);
+            await Clients.Group(msgPayload.GroupName).SendAsync(ClientCommand.MessageToGroup, broadcast);
+        }
+
+        public async Task HubListGroups()
+        {
+            //TODO: Move to service layer
+            var queryResult = await _mediator.Send(new ListAvailableGroupsQuery());
+
+            var availableGroups =
+                queryResult.ActiveGroups.Select(x => 
+                    new GroupListMessage.GroupInfo 
+                    { 
+                        GroupId = x.GroupId, 
+                        GroupName = x.GroupName ,
+                        MemberCount = x.MembersCount,
+                        MaxMemberCount = Constants.MAX_USERS_PER_GROUP
+                    })
+                .ToList();
+
+            var response =
+                new MessageBuilder<GroupListMessage>()
+                    .WithPayload(new GroupListMessage { Groups = availableGroups })
+                    .Build();
+
+            await Clients.Caller.SendAsync(ClientCommand.GroupList, response);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace Core.Messaging.Payloads
+﻿namespace Core.Messaging.Payloads.Client
 {
     public class LoginRequestMessage : IMessagePayload
     {

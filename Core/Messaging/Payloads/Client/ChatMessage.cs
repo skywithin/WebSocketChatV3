@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Core.Messaging.Payloads
+namespace Core.Messaging.Payloads.Client
 {
     public class ChatMessage : IMessagePayload
     {
@@ -14,7 +14,7 @@ namespace Core.Messaging.Payloads
         public ChatMessage() { } //Must have default constructor
 
         public ChatMessage(
-            Guid userId, 
+            Guid userId,
             string userName,
             Guid groupId,
             string groupName,

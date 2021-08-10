@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Core.Messaging.Payloads
+namespace Core.Messaging.Payloads.Client
 {
     public class JoinGroupRequestMessage : IMessagePayload
     {

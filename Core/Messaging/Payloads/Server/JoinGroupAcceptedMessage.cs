@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Core.Messaging.Payloads
+namespace Core.Messaging.Payloads.Server
 {
     public class JoinGroupAcceptedMessage : IMessagePayload
     {

@@ -1,6 +1,7 @@
 ﻿using Core.Messaging;
 using Core.Messaging.Constants;
-using Core.Messaging.Payloads;
+using Core.Messaging.Payloads.Client;
+using Core.Messaging.Payloads.Server;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace ChatClient
     class Program
     {
         //TODO: Move to config
-        static readonly string DefaultServerAddress = "https://localhost:5001/gamehub"; //"ws://localhost:5000/gamehub";
+        static readonly string DefaultServerAddress = "https://localhost:5001/gamehub";
 
         static readonly ClientContext Context = new ClientContext();
 
@@ -117,13 +118,15 @@ namespace ChatClient
 
                 Context.CurrentGroupName = msgPayload.GroupName;
                 Context.CurrentGroupId = msgPayload.GroupId;
+
+                Console.WriteLine($"You've joined {msgPayload.GroupName}");
             });
 
             hubConnection.On<Message<JoinGroupDeniedMessage>>(ClientCommand.JoinGroupDenied, (message) =>
             {
                 var msgPayload = message.Payload;
 
-                Console.WriteLine($"Unable to join group {msgPayload.GroupName}. {msgPayload.DeniedReason}");
+                Console.WriteLine($"Unable to join. {msgPayload.DeniedReason}");
             });
 
             hubConnection.On<Message<UserLeftGroupMessage>>(ClientCommand.UserLeftGroup, (message) =>
@@ -143,10 +146,29 @@ namespace ChatClient
                 Console.WriteLine($"You have left group {msgPayload.GroupName}");
             });
 
-            hubConnection.On<Message<ChatMessage>>(ClientCommand.MessageToGroup, (message) =>
+            hubConnection.On<Message<ChatEchoMessage>>(ClientCommand.MessageToGroup, (message) =>
             {
                 var msgPayload = message.Payload;
                 Console.WriteLine($"{msgPayload.UserName}: {msgPayload.Content}");
+            });
+
+            hubConnection.On<Message<GroupListMessage>>(ClientCommand.GroupList, (message) =>
+            {
+                var msgPayload = message.Payload;
+
+                if (msgPayload.Groups.Any())
+                {
+                    Console.WriteLine("The following groups are available:");
+                    foreach (var groupinfo in msgPayload.Groups)
+                    {
+                        Console.WriteLine($"{groupinfo.GroupName} ({groupinfo.MemberCount}/{groupinfo.MaxMemberCount})");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("There are no active groups available. Create your own one!");
+                }
+                
             });
         }
 
@@ -212,12 +234,20 @@ namespace ChatClient
         {
             var leaveGroupMsg =
                 new MessageBuilder<LeaveGroupMessage>()
-                    .WithPayload(new LeaveGroupMessage { UserName = Context.UserName, GroupName = Context.CurrentGroupName })
+                    .WithPayload(new LeaveGroupMessage(Context.UserId, Context.UserName, Context.CurrentGroupId.Value, Context.CurrentGroupName))
                     .Build();
 
             await hubConnection.SendAsync(HubCommand.HubLeaveGroup, leaveGroupMsg);
 
             Context.CurrentGroupName = null;
+        }
+
+        private static async Task SendListGroupsCommand(HubConnection hubConnection)
+        {
+            await hubConnection.SendAsync(HubCommand.HubListGroups);
+
+            //HACK: Need to get response from the server
+            await Task.Delay(500);
         }
 
         private static async Task SendMessageToGroup(HubConnection hubConnection, string chatContent)
@@ -249,7 +279,7 @@ namespace ChatClient
             }
             else if (command.Equals(ConsoleCommand.List, StringComparison.InvariantCultureIgnoreCase))
             {
-                Console.WriteLine($"Command {command} needs to be implemented");
+                await SendListGroupsCommand(hubConnection);
             }
             else if (command.Equals(ConsoleCommand.Echo, StringComparison.InvariantCultureIgnoreCase))
             {

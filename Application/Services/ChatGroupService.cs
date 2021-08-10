@@ -1,4 +1,5 @@
-﻿using Application.MediatR.Commands.AddUserToGroup;
+﻿using Application.Config;
+using Application.MediatR.Commands.AddUserToGroup;
 using Application.MediatR.Commands.FindOrCreateGroup;
 using Application.Services.Models;
 using MediatR;
@@ -15,9 +16,6 @@ namespace Application.Services
 
     public class ChatGroupService : IChatGroupService
     {
-        //TODO: Move to config
-        private const int MAX_USERS_PER_GROUP = 3; //TODO: 20
-
         private readonly ILogger<ChatGroupService> _logger;
         private readonly IMediator _mediator;
 
@@ -46,8 +44,8 @@ namespace Application.Services
             }
 
             // Check if user is allowed to join
-            if (group.MemberIds.Contains(joinRequest.UserId) == false && 
-                group.MemberIds.Count() >= MAX_USERS_PER_GROUP)
+            if (group.MemberIds.Contains(joinRequest.UserId) == false &&
+                group.MemberIds.Count() >= Constants.MAX_USERS_PER_GROUP)
             {
                 //Group is full
                 return new JoinGroupResult 
@@ -56,7 +54,7 @@ namespace Application.Services
                     group.GroupId,
                     group.GroupName,
                     joinRequest.UserId,
-                    deniedReason: $"Sorry, the group {joinRequest.GroupName} is full" 
+                    deniedReason: $"Sorry, group {joinRequest.GroupName} is full" 
                 );
             }
 

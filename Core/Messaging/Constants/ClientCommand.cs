@@ -10,6 +10,7 @@
         public static string JoinGroupAccepted => "JoinGroupAccepted";
         public static string JoinGroupDenied => "JoinGroupDenied";
         public static string RemovedFromGroup => "RemovedFromGroup";
+        public static string GroupList => "GroupList";
 
     }
 }
